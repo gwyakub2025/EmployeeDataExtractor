@@ -22,7 +22,7 @@ export const ReportExtractor: React.FC<ReportExtractorProps> = ({ rows, headers 
     setError(null);
     try {
       const { logic } = await translateQueryToFilter(query, headers);
-      // Safe dynamic evaluation of logic provided by AI
+      // eslint-disable-next-line no-new-func
       const filterFn = new Function('row', `try { return ${logic}; } catch(e) { return false; }`);
       const filtered = rows.filter(row => filterFn(row));
       setResults(filtered);

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import * as XLSX from 'xlsx';
-import LZString from 'lz-string';
+import * as LZString from 'lz-string';
 import { 
   FileUp, 
   Table, 
@@ -61,7 +61,6 @@ const App: React.FC = () => {
       } catch (e) { console.error("Shared Link Corrupted"); }
     }
     // No saved data is loaded on first visit as per requirement "It should load the blank values"
-    // However, for typical usage, we'd check localStorage. Here we'll default to [] if not shared.
     return [];
   });
 
@@ -78,7 +77,6 @@ const App: React.FC = () => {
   const [drillDownData, setDrillDownData] = useState<{ title: string; rows: DataRow[] } | null>(null);
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
 
-  // Add missing handleDrillDown function for dashboard interaction
   const handleDrillDown = (title: string, rows: DataRow[]) => {
     setDrillDownData({ title, rows });
     setDateRange({ start: '', end: '' });
