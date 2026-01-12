@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 import { login } from '../services/firebase';
 import { ShieldCheck, Lock, Mail, Loader2 } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  // Pre-filled credentials as requested
-  const [email, setEmail] = useState('admin@empmas.com');
-  const [password, setPassword] = useState('admin123');
+  // Credentials cleared by default
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +16,7 @@ export const Login: React.FC = () => {
     try {
       await login(email, password);
     } catch (err: any) {
-      setError("Invalid credentials. Please use admin@empmas.com / admin123");
+      setError("Invalid credentials.");
     } finally {
       setLoading(false);
     }
@@ -36,7 +35,7 @@ export const Login: React.FC = () => {
           </div>
           
           <h2 className="text-3xl font-black text-white text-center tracking-tighter mb-2">Secure Access</h2>
-          <p className="text-slate-500 text-center text-xs font-black uppercase tracking-widest mb-10">DataHarmonizer Pro</p>
+          <p className="text-slate-500 text-center text-xs font-black uppercase tracking-widest mb-10">GULF WAY PRO DASHBOARD</p>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
@@ -63,7 +62,7 @@ export const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-slate-950 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                  placeholder="admin123"
+                  placeholder="••••••••"
                   required
                 />
               </div>
@@ -79,11 +78,6 @@ export const Login: React.FC = () => {
               {loading ? <Loader2 className="animate-spin" /> : "Authenticate"}
             </button>
           </form>
-          
-          <div className="mt-8 text-center">
-            <p className="text-[10px] text-slate-600 font-bold mb-2">DEFAULT ADMIN CREDENTIALS</p>
-            <p className="text-[10px] text-indigo-400 font-mono">admin@empmas.com • admin123</p>
-          </div>
         </div>
       </div>
     </div>

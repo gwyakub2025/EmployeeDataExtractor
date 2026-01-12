@@ -253,7 +253,7 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-2.5 rounded-2xl text-white shadow-2xl"><Database size={24} /></div>
           <div>
-            <h1 className="text-xl font-black text-white tracking-tighter leading-none">DataHarmonizer <span className="text-indigo-500">Pro</span></h1>
+            <h1 className="text-xl font-black text-white tracking-tighter leading-none">GULF WAY PRO <span className="text-indigo-500">DASHBOARD</span></h1>
           </div>
         </div>
         
