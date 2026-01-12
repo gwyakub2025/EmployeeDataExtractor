@@ -2,10 +2,33 @@
 import { GoogleGenAI } from "@google/genai";
 import { DataRow } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to safely get the API Key from Vite env or process env
+const getApiKey = () => {
+  const meta = import.meta as any;
+  // Check standard Vite env first
+  if (meta && meta.env && meta.env.VITE_API_KEY) {
+    return meta.env.VITE_API_KEY;
+  }
+  // Check process.env (legacy/Node compatibility)
+  try {
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+      // @ts-ignore
+      return process.env.API_KEY;
+    }
+  } catch (e) {
+    // Ignore ReferenceErrors
+  }
+  return undefined;
+};
+
+const apiKey = getApiKey();
+// Initialize only if key exists to prevent immediate crash, though calls will fail
+const ai = new GoogleGenAI({ apiKey: apiKey || 'DUMMY_KEY_TO_PREVENT_INIT_CRASH' });
 
 export async function generateDataSummary(data: DataRow[]): Promise<string> {
-  if (!process.env.API_KEY) return "AI Summary requires an API Key.";
+  if (!apiKey) return "AI Summary requires a configured API Key.";
+  
   const sample = data.slice(0, 20);
   const prompt = `Analyze this dataset and provide a high-level executive summary. Identify trends, anomalies, and key takeaways.
   
@@ -22,12 +45,12 @@ export async function generateDataSummary(data: DataRow[]): Promise<string> {
     return response.text || "Unable to generate summary.";
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Error generating AI summary.";
+    return "Error generating AI summary. Ensure API Key is valid.";
   }
 }
 
 export async function translateQueryToFilter(query: string, headers: string[]): Promise<{ logic: string }> {
-  if (!process.env.API_KEY) throw new Error("API Key Missing");
+  if (!apiKey) throw new Error("API Key Missing");
 
   const prompt = `You are a data analyst. Transform the user's natural language query into a Javascript logical expression that can be used inside an array.filter() function.
   
