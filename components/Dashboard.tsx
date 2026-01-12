@@ -309,7 +309,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ rows, onDrillDown }) => {
 };
 
 interface ProKpiProps {
-  icon: React.ReactElement;
+  icon: React.ReactElement<any>;
   label: string;
   value: number;
   color: 'rose' | 'amber' | 'emerald' | 'indigo' | 'slate';
