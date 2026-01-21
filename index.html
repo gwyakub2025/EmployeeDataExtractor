@@ -6,8 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DataHarmonizer Pro</title>
     
-    <!-- 1. STYLES -->
+    <!-- 1. EXTERNAL LIBRARIES -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
         body { background-color: #020617; color: #cbd5e1; font-family: sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -15,18 +21,12 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
         
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        .animate-in { animation: fade-in 0.5s ease-out forwards; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fade-in 0.6s ease-out forwards; }
+        
         .loader { border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top: 3px solid #6366f1; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
-
-    <!-- 2. EXTERNAL LIBRARIES (UMD) -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 <script type="importmap">
 {
   "imports": {
@@ -45,168 +45,60 @@
     <div id="root"></div>
 
     <script type="text/babel" data-presets="react,es2015">
-        
-        // --- 1. GLOBALS & SHIMS ---
+        // --- 1. GLOBALS & HELPER FUNCTIONS ---
         const { useState, useEffect, useMemo, useRef } = React;
-        
-        // --- ICONS WRAPPER ---
-        const Icon = ({ name, size = 24, className, ...props }) => {
-            const iconName = name;
-            const ref = useRef(null);
-            useEffect(() => {
-                if (ref.current) {
-                    lucide.createIcons({
-                        root: ref.current.parentNode,
-                        icons: { [iconName]: lucide.icons[iconName] },
-                        attrs: { class: className, width: size, height: size, ...props }
-                    });
-                }
-            }, [name, size, className]);
 
-            const LucideIcon = lucide.icons[name];
-            if (!LucideIcon) return null;
+        // -- Icon Helper (Bridges Lucide UMD to React) --
+        const Icon = ({ name, size = 20, className }) => {
+            const lucideGlobal = window.lucide;
+            if (!lucideGlobal || !lucideGlobal.icons) return null;
+            const iconData = lucideGlobal.icons[name];
+            if (!iconData) return null;
 
             return (
                 <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
                     width={size} 
                     height={size} 
-                    className={className} 
-                    {...props} 
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
                     strokeWidth="2" 
                     strokeLinecap="round" 
-                    strokeLinejoin="round"
+                    strokeLinejoin="round" 
+                    className={className}
                     dangerouslySetInnerHTML={{ 
-                        __html: LucideIcon.map(child => {
+                        __html: iconData.map(child => {
                             const [tag, attrs] = child;
-                            const attrString = Object.entries(attrs).map(([k,v]) => `${k}="${v}"`).join(' ');
-                            return `<${tag} ${attrString} />`;
+                            const attrStr = Object.entries(attrs).map(([k,v]) => `${k}="${v}"`).join(' ');
+                            return `<${tag} ${attrStr} />`;
                         }).join('') 
                     }}
                 />
             );
         };
 
-        const IconWrapper = (name) => (props) => <Icon name={name} {...props} />;
-        
-        // Define all icons used
-        const FileUp = IconWrapper('FileUp');
-        const Table = IconWrapper('Table');
-        const LayoutGrid = IconWrapper('LayoutGrid');
-        const Sparkles = IconWrapper('Sparkles');
-        const Search = IconWrapper('Search');
-        const Database = IconWrapper('Database');
-        const PieChart = IconWrapper('PieChart');
-        const LogOut = IconWrapper('LogOut');
-        const FileSpreadsheet = IconWrapper('FileSpreadsheet');
-        const Trash2 = IconWrapper('Trash2');
-        const ShieldCheck = IconWrapper('ShieldCheck');
-        const Eye = IconWrapper('Eye');
-        const Layers = IconWrapper('Layers');
-        const FileText = IconWrapper('FileText');
-        const CalendarDays = IconWrapper('CalendarDays');
-        const FileSearch = IconWrapper('FileSearch');
-        const RefreshCw = IconWrapper('RefreshCw');
-        const X = IconWrapper('X');
-        const Building2 = IconWrapper('Building2');
-        const ChevronDown = IconWrapper('ChevronDown');
-        const Users = IconWrapper('Users');
-        const Plus = IconWrapper('Plus');
-        const AlertCircle = IconWrapper('AlertCircle');
-        const Download = IconWrapper('Download');
-        const DownloadCloud = IconWrapper('DownloadCloud');
-        const Zap = IconWrapper('Zap');
-        const Activity = IconWrapper('Activity');
-        const Bike = IconWrapper('Bike');
-        const MoreHorizontal = IconWrapper('MoreHorizontal');
-        const UserX = IconWrapper('UserX');
-        const ShieldX = IconWrapper('ShieldX');
-        const ShieldAlert = IconWrapper('ShieldAlert');
-        const CreditCard = IconWrapper('CreditCard');
-        const Calendar = IconWrapper('Calendar');
-        const Loader2 = IconWrapper('Loader2');
-        const UserPlus = IconWrapper('UserPlus');
-        const Shield = IconWrapper('Shield');
-        const User = IconWrapper('User');
-        const Key = IconWrapper('Key');
-        const Mail = IconWrapper('Mail');
-        const Lock = IconWrapper('Lock');
-        const BarChart4 = IconWrapper('BarChart4');
-
-
-        // --- 2. GAS BACKEND BRIDGE ---
+        // --- 2. GAS BRIDGE (COMMUNICATION LAYER) ---
         const GAS = {
             run: (fn, ...args) => new Promise((resolve, reject) => {
-                // Check if running in GAS environment
-                if (typeof google === 'undefined' || typeof google.script === 'undefined') {
-                    console.warn("Google Script Run not found (Local Mode?)");
-                    return reject(new Error("GAS Environment not detected"));
+                if (typeof google === 'undefined') {
+                    console.warn(`[DEV MODE] Calling ${fn} with`, args);
+                    return reject("Google Environment not found. (Dev Mode)");
                 }
                 google.script.run
                     .withSuccessHandler(resolve)
-                    .withFailureHandler((err) => reject(new Error(err.message || err)))
+                    .withFailureHandler(err => reject(new Error(err.message)))
                     [fn](...args);
             })
         };
 
-        const fetchCompanies = () => GAS.run('getCompanies');
-        const createCompanyEntity = (name) => GAS.run('createCompany', name);
-        const deleteCompanyData = (id, fileId) => GAS.run('deleteCompany', id, fileId);
-        
-        const uploadCompanyData = (file, companyId) => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                    const base64 = reader.result.split(',')[1];
-                    GAS.run('uploadCompanyData', base64, file.name, companyId)
-                        .then(resolve)
-                        .catch(reject);
-                };
-                reader.onerror = error => reject(error);
-            });
-        };
-
-        const downloadCompanyFile = (fileId) => {
-            return GAS.run('getCompanyFile', fileId).then(base64 => {
-                 const binaryString = window.atob(base64);
-                 const len = binaryString.length;
-                 const bytes = new Uint8Array(len);
-                 for (let i = 0; i < len; i++) {
-                     bytes[i] = binaryString.charCodeAt(i);
-                 }
-                 return bytes.buffer;
-            });
-        };
-
-        const generateDataSummary = (data) => {
-            const sample = data.slice(0, 15);
-            const prompt = `Analyze this HR data sample (JSON) and provide an executive summary of risks, expiry trends, and anomalies. Total records: ${data.length}. Sample: ${JSON.stringify(sample)}`;
-            return GAS.run('callGemini', prompt);
-        };
-        
-        const translateQueryToFilter = (query, headers) => {
-             // Mock filter logic for GAS version since detailed logic requires simpler implementation
-             // or specific robust backend logic. We will rely on simple client-side search or a simplified prompt.
-             return new Promise(resolve => {
-                 // Basic text matching fallback for this demo
-                 resolve({ logic: 'true' }); 
-             });
-        }
-
-
-        // --- 3. UTILS (DATA PROCESSOR) ---
-        
+        // --- 3. DATA PROCESSING LOGIC (Copied from dataProcessor.ts) ---
         const DATE_PATTERN = /^(?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})|(?:\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})$/;
-        
+
         function parseToStandardDate(val) {
             if(!val) return null;
             const strVal = String(val);
-            if (DATE_PATTERN.test(strVal)) {
-                return strVal; 
-            }
+            if (DATE_PATTERN.test(strVal)) return strVal;
             const num = Number(val);
             if (!isNaN(num) && num > 40000 && num < 60000) {
                 const date = new Date(Math.round((num - 25569) * 86400 * 1000));
@@ -218,6 +110,7 @@
         function harmonizeData(rawRows) {
             if (!rawRows || rawRows.length === 0) return { headers: [], rows: [] };
             
+            // Merge Strategy: Combine rows where ID (first col) is empty
             const merged = [];
             const headers = Object.keys(rawRows[0]);
             let current = null;
@@ -238,6 +131,7 @@
                 }
             });
 
+            // Date Parsing
             const finalRows = merged.map(row => {
                 const newRow = { ...row };
                 Object.keys(newRow).forEach(k => {
@@ -252,58 +146,63 @@
             return { headers, rows: finalRows };
         }
 
-        function extractDashboardMetrics(rows) {
+        function extractMetrics(rows) {
             const today = new Date();
             const metrics = {
                 total: rows.length,
-                escapeCount: 0,
-                expiredCardCount: 0,
-                activeCount: 0,
-                upcomingRenewals: 0,
-                monthlyRenewals: {},
-                monthlyEscapes: {},
-                escapeRecords: [],
+                expired: 0,
+                active: 0,
+                escapes: 0,
+                upcoming: 0,
+                activeRecords: [],
                 expiredRecords: [],
+                escapeRecords: [],
                 upcomingRecords: [],
+                monthlyRenewals: {},
                 nationalityData: {},
                 statusData: {}
             };
 
             rows.forEach(row => {
+                // Nationality
                 const natKey = Object.keys(row).find(k => k.toLowerCase().includes('nationality'));
-                const nat = natKey ? (String(row[natKey]).trim() || 'Unspecified') : 'Unspecified';
-                metrics.nationalityData[nat] = (metrics.nationalityData[nat] || 0) + 1;
+                if(natKey) {
+                    const nat = String(row[natKey]||'Unknown');
+                    metrics.nationalityData[nat] = (metrics.nationalityData[nat] || 0) + 1;
+                }
 
-                const statusKey = Object.keys(row).find(k => k.toLowerCase().includes('status') || k.toLowerCase().includes('card type'));
-                if (statusKey) metrics.statusData[row[statusKey]] = (metrics.statusData[row[statusKey]] || 0) + 1;
-
-                let hasEscape = false;
+                // Escapes
+                let isEscape = false;
                 Object.values(row).forEach(v => {
-                    if (String(v).toLowerCase().includes('escape report')) hasEscape = true;
+                    if (String(v).toLowerCase().includes('escape')) isEscape = true;
                 });
-                if (hasEscape) {
-                    metrics.escapeCount++;
+                if (isEscape) {
+                    metrics.escapes++;
                     metrics.escapeRecords.push(row);
                 }
 
-                const dateKey = Object.keys(row).find(k => k.toLowerCase().includes('expiry') || k.toLowerCase().includes('(date)'));
+                // Dates
+                const dateKey = Object.keys(row).find(k => k.toLowerCase().includes('expiry') || k.includes('(Date)'));
                 if (dateKey) {
                     const val = String(row[dateKey]).split(';')[0].trim();
                     const parts = val.split(/[\/\-]/);
                     if (parts.length === 3) {
-                         const dObj = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-                         if (!isNaN(dObj.getTime())) {
-                             const monthKey = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}`;
-                             metrics.monthlyRenewals[monthKey] = (metrics.monthlyRenewals[monthKey] || 0) + 1;
-                             if (hasEscape) metrics.monthlyEscapes[monthKey] = (metrics.monthlyEscapes[monthKey] || 0) + 1;
+                         const d = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                         if (!isNaN(d.getTime())) {
+                             const mKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                             metrics.monthlyRenewals[mKey] = (metrics.monthlyRenewals[mKey] || 0) + 1;
 
-                             if (dObj < today) {
-                                 metrics.expiredCardCount++;
+                             if (d < today) {
+                                 metrics.expired++;
                                  metrics.expiredRecords.push(row);
                              } else {
-                                 metrics.activeCount++;
-                                 if (dObj.getMonth() === today.getMonth() && dObj.getFullYear() === today.getFullYear()) {
-                                     metrics.upcomingRenewals++;
+                                 metrics.active++;
+                                 metrics.activeRecords.push(row);
+                                 // Check upcoming (next 30 days)
+                                 const diffTime = d - today;
+                                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                                 if (diffDays >= 0 && diffDays <= 30) {
+                                     metrics.upcoming++;
                                      metrics.upcomingRecords.push(row);
                                  }
                              }
@@ -330,143 +229,99 @@
             return { rows: Object.keys(pivot).map(key => ({ row: key, ...pivot[key] })), columns: Array.from(allCols).sort() };
         }
 
+        // --- 4. REACT COMPONENTS ---
 
-        // --- 4. UI COMPONENTS ---
+        // A. LOGIN COMPONENT
+        const Login = ({ onLogin }) => {
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
 
-        const ProKpi = ({ icon, label, value, color, onClick, onDownload }) => {
-            const themes = { 
-                rose: 'bg-rose-50 text-rose-600 ring-rose-100', 
-                amber: 'bg-amber-50 text-amber-600 ring-amber-100', 
-                emerald: 'bg-emerald-50 text-emerald-600 ring-emerald-100', 
-                indigo: 'bg-indigo-50 text-indigo-600 ring-indigo-100', 
-                slate: 'bg-slate-100 text-slate-600 ring-slate-100' 
-            };
-            
-            return (
-                <div onClick={onClick} className="relative p-8 bg-white rounded-[48px] border border-slate-100 shadow-xl hover:-translate-y-2 hover:shadow-2xl transition-all cursor-pointer group flex flex-col justify-between min-h-[260px] overflow-hidden">
-                <div className="flex items-start justify-between">
-                    <div className={`p-5 rounded-3xl w-fit ring-1 ${themes[color]}`}>{React.cloneElement(icon, { size: 28 })}</div>
-                    <button 
-                    onClick={onDownload} 
-                    className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-2xl transition-colors"
-                    title="Download Report"
-                    >
-                    <DownloadCloud size={20} />
-                    </button>
-                </div>
-                <div className="relative z-10 mt-6">
-                    <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">{label}</h4>
-                    <div className="text-6xl font-black text-slate-900 tracking-tighter leading-none">{value}</div>
-                </div>
-                
-                <div className={`absolute -bottom-12 -right-12 w-48 h-48 rounded-full opacity-5 ${themes[color].split(' ')[0]} blur-3xl group-hover:opacity-10 transition-opacity`}></div>
-                </div>
-            );
-        };
-
-        const Dashboard = ({ rows, onDrillDown }) => {
-            const [isExporting, setIsExporting] = useState(false);
-            const metrics = useMemo(() => extractDashboardMetrics(rows), [rows]);
-
-            const directDownload = (filename, data, e) => {
-                if (e) e.stopPropagation();
-                const ws = XLSX.utils.json_to_sheet(data);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Report");
-                XLSX.writeFile(wb, `${filename}_${new Date().getTime()}.xlsx`);
-            };
-
-            const workforceSplit = useMemo(() => {
-                const jobKey = Object.keys(rows[0] || {}).find(k => 
-                    k.toLowerCase().includes('job') || k.toLowerCase().includes('description') || k.toLowerCase().includes('designation')
-                );
-                const motorcyclistRows = [];
-                const staffSupportRows = [];
-                rows.forEach(row => {
-                    const job = String(row[jobKey || ''] || '').toLowerCase();
-                    if (job.includes('motorcycle') || job.includes('bike') || job.includes('motorcyclist')) motorcyclistRows.push(row);
-                    else staffSupportRows.push(row);
-                });
-                return { motorcyclist: motorcyclistRows, staffSupport: staffSupportRows };
-            }, [rows]);
-
-            const renewalForecast = useMemo(() => {
-                const today = new Date();
-                const months = [];
-                const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN"];
-                
-                for (let i = 0; i < 6; i++) {
-                    const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
-                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                    const count = metrics.monthlyRenewals[key] || 0;
-                    const escapeCount = metrics.monthlyEscapes[key] || 0;
-                    
-                    months.push({ 
-                        key, 
-                        month: monthNames[d.getMonth()], 
-                        year: d.getFullYear(), 
-                        count, 
-                        escapeCount,
-                        rows: [] // Simplified for forecast rows mapping
+            const handleLogin = () => {
+                setLoading(true);
+                setError(null);
+                // In GAS, authentication is handled by the wrapper. We just ask backend for session.
+                GAS.run('getUserSession')
+                    .then(user => {
+                        onLogin(user);
+                    })
+                    .catch(e => {
+                        setError("Authentication Failed: " + e.message);
+                        setLoading(false);
                     });
-                }
-                const maxMonthCount = Math.max(...months.map(m => m.count), 1);
-                return months.map(m => ({ ...m, intensity: (m.count / maxMonthCount) * 100 }));
-            }, [metrics, rows]);
+            };
 
             return (
-                <div className="space-y-16 animate-in">
-                    {/* Header */}
-                    <div className="bg-slate-900 rounded-[60px] p-12 shadow-2xl relative overflow-hidden flex flex-col xl:flex-row items-center justify-between gap-12 border border-white/5">
-                        <div className="relative z-10 space-y-5">
-                            <h2 className="text-4xl font-black text-white tracking-tighter">Master Sync</h2>
-                            <p className="text-slate-400 font-medium text-lg">Auditing {metrics.total} entities.</p>
-                        </div>
-                        <div className="flex gap-4 relative z-10">
-                             <div className="text-center"><div className="text-2xl font-black text-white">{metrics.total}</div><div className="text-[9px] uppercase text-slate-500">Total</div></div>
-                             <div className="text-center"><div className="text-2xl font-black text-rose-400">{metrics.expiredCardCount}</div><div className="text-[9px] uppercase text-slate-500">Expired</div></div>
-                             <div className="text-center"><div className="text-2xl font-black text-emerald-400">{metrics.activeCount}</div><div className="text-[9px] uppercase text-slate-500">Active</div></div>
-                        </div>
-                    </div>
+                <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+                    <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-[40px] p-10 text-center shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/20 blur-[80px] rounded-full -mr-20 -mt-20"></div>
+                        <div className="relative z-10">
+                            <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-white/5 shadow-xl">
+                                <Icon name="ShieldCheck" className="text-indigo-500" size={40} />
+                            </div>
+                            <h2 className="text-4xl font-black text-white mb-2 tracking-tighter">Secure Access</h2>
+                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-10">DataHarmonizer Pro</p>
+                            
+                            {error && <div className="bg-rose-500/10 text-rose-500 p-3 rounded-xl text-xs font-bold mb-6">{error}</div>}
 
-                    {/* KPIs */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-                        <ProKpi icon={<UserX />} label="Escape Reports" value={metrics.escapeCount} color="rose" onClick={() => onDrillDown("Escape Registry", metrics.escapeRecords)} onDownload={(e) => directDownload("Escape_Reports", metrics.escapeRecords, e)} />
-                        <ProKpi icon={<ShieldX />} label="Expired Credentials" value={metrics.expiredCardCount} color="amber" onClick={() => onDrillDown("Expired Registry", metrics.expiredRecords)} onDownload={(e) => directDownload("Expired_Credentials", metrics.expiredRecords, e)} />
-                        <ProKpi icon={<CreditCard />} label="Active Personnel" value={metrics.activeCount} color="emerald" onClick={() => onDrillDown("Active", rows.filter(r => !metrics.expiredRecords.includes(r)))} onDownload={(e) => directDownload("Active_Personnel", rows.filter(r => !metrics.expiredRecords.includes(r)), e)} />
-                        <ProKpi icon={<Activity />} label="Upcoming Renewals" value={metrics.upcomingRenewals} color="indigo" onClick={() => onDrillDown("Upcoming", metrics.upcomingRecords)} onDownload={(e) => directDownload("Upcoming_Renewals", metrics.upcomingRecords, e)} />
-                    </div>
-
-                    {/* Forecast */}
-                    <div className="bg-slate-900 p-12 rounded-[70px] shadow-2xl border border-white/5">
-                        <h3 className="text-3xl font-black text-white mb-8">Expiry Forecast</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
-                            {renewalForecast.map((item) => (
-                                <div key={item.key} className="bg-white/5 p-6 rounded-[32px] text-center">
-                                    <div className="text-xl font-black text-white">{item.month}</div>
-                                    <div className="text-[10px] text-slate-500">{item.year}</div>
-                                    <div className="text-4xl font-black text-white my-4">{item.count}</div>
-                                    {item.escapeCount > 0 && <div className="text-rose-400 text-[10px] font-bold">{item.escapeCount} Escapes</div>}
-                                </div>
-                            ))}
+                            <button 
+                                onClick={handleLogin} 
+                                disabled={loading}
+                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest flex justify-center gap-3 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+                            >
+                                {loading ? <span className="loader w-4 h-4 border-2"></span> : "Sign In with Google"}
+                            </button>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        const DataTable = ({ rows, headers }) => {
-            if(!rows.length) return <div className="p-12 text-center text-slate-500 font-bold">No Records</div>;
+        // B. KPI CARD
+        const KpiCard = ({ label, value, icon, color, onClick }) => {
+             const colors = {
+                 slate: "text-slate-400 bg-slate-500/10 group-hover:bg-slate-500",
+                 emerald: "text-emerald-400 bg-emerald-500/10 group-hover:bg-emerald-500",
+                 amber: "text-amber-400 bg-amber-500/10 group-hover:bg-amber-500",
+                 rose: "text-rose-400 bg-rose-500/10 group-hover:bg-rose-500",
+                 indigo: "text-indigo-400 bg-indigo-500/10 group-hover:bg-indigo-500",
+             };
+             
+             return (
+                <div onClick={onClick} className="cursor-pointer bg-slate-900 border border-white/5 p-8 rounded-[32px] hover:border-white/20 transition-all group hover:-translate-y-1 hover:shadow-2xl">
+                    <div className="flex justify-between items-start mb-6">
+                        <div className={`p-4 rounded-2xl transition-colors ${colors[color] || colors.slate} group-hover:text-white`}>
+                            <Icon name={icon} size={24} />
+                        </div>
+                    </div>
+                    <div className="text-4xl font-black text-white tracking-tight">{value}</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mt-2">{label}</div>
+                </div>
+            );
+        };
+
+        // C. DATA TABLE
+        const DataTable = ({ rows, headers, highlight }) => {
+            if (!rows.length) return <div className="p-12 text-center text-slate-600 font-bold uppercase tracking-widest">No matching records found.</div>;
             return (
-                <div className="overflow-auto max-h-[600px] border border-slate-200 rounded-2xl bg-white shadow-xl custom-scrollbar">
+                <div className="overflow-auto max-h-[600px] border border-white/10 rounded-2xl bg-slate-900 custom-scrollbar">
                     <table className="w-full text-xs text-left">
-                        <thead className="bg-slate-50 sticky top-0 z-10">
-                            <tr>{headers.map(h => <th key={h} className="p-4 font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 whitespace-nowrap">{h.split('(')[0]}</th>)}</tr>
+                        <thead className="bg-slate-950 sticky top-0 z-10 text-slate-500 uppercase tracking-wider">
+                            <tr>
+                                {headers.map(h => <th key={h} className="p-4 font-bold border-b border-white/10 whitespace-nowrap">{h}</th>)}
+                            </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-white/5 text-slate-400">
                             {rows.map((r, i) => (
-                                <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                                    {headers.map(h => <td key={h} className="p-4 text-slate-600 font-medium whitespace-nowrap max-w-[200px] truncate">{String(r[h] || '')}</td>)}
+                                <tr key={i} className="hover:bg-white/5 transition-colors">
+                                    {headers.map(h => {
+                                        const val = String(r[h]||'');
+                                        return (
+                                            <td key={h} className="p-4 whitespace-nowrap max-w-[200px] truncate">
+                                                {highlight && val.toLowerCase().includes(highlight.toLowerCase()) ? 
+                                                    <span className="bg-indigo-500/30 text-indigo-200">{val}</span> : val}
+                                            </td>
+                                        );
+                                    })}
                                 </tr>
                             ))}
                         </tbody>
@@ -475,260 +330,314 @@
             );
         };
 
-        const PivotView = ({ rows, headers }) => {
-            const [config, setConfig] = useState({
-                rowField: headers[0],
-                columnField: headers[1] || headers[0],
-                valueField: headers.find(h => h.includes('Number')) || headers[0],
-                aggType: 'count'
-            });
-
-            const pivotData = useMemo(() => generatePivotData(rows, config.rowField, config.columnField, config.valueField, config.aggType), [rows, config]);
-
-            return (
-                <div className="space-y-6">
-                     <div className="grid grid-cols-4 gap-4">
-                         {['rowField', 'columnField', 'valueField'].map(f => (
-                             <div key={f}>
-                                 <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">{f.replace('Field','')}</label>
-                                 <select value={config[f]} onChange={e => setConfig({...config, [f]: e.target.value})} className="w-full p-2 rounded-lg border text-xs">{headers.map(h => <option key={h} value={h}>{h}</option>)}</select>
-                             </div>
-                         ))}
-                         <div>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Agg</label>
-                            <select value={config.aggType} onChange={e => setConfig({...config, aggType: e.target.value})} className="w-full p-2 rounded-lg border text-xs"><option value="count">Count</option><option value="sum">Sum</option></select>
-                         </div>
-                     </div>
-                     <div className="overflow-auto border rounded-xl bg-white">
-                         <table className="w-full text-xs">
-                             <thead className="bg-slate-50">
-                                 <tr>
-                                     <th className="p-3 font-bold">{config.rowField} / {config.columnField}</th>
-                                     {pivotData.columns.map(c => <th key={c} className="p-3 font-bold text-center">{c}</th>)}
-                                 </tr>
-                             </thead>
-                             <tbody>
-                                 {pivotData.rows.map((r, i) => (
-                                     <tr key={i} className="border-t border-slate-100">
-                                         <td className="p-3 font-bold bg-slate-50">{r.row}</td>
-                                         {pivotData.columns.map(c => <td key={c} className="p-3 text-center text-slate-600">{r[c] || '-'}</td>)}
-                                     </tr>
-                                 ))}
-                             </tbody>
-                         </table>
-                     </div>
-                </div>
-            );
-        };
-
-        const ReportExtractor = ({ rows, headers }) => {
-            const [query, setQuery] = useState('');
-            const [results, setResults] = useState(null);
+        // D. DASHBOARD COMPONENT
+        const Dashboard = ({ rows, onDrillDown }) => {
+            const metrics = useMemo(() => extractMetrics(rows), [rows]);
             
-            const handleExtract = () => {
-                 if(!query) return;
-                 const terms = query.toLowerCase().split(' ');
-                 const filtered = rows.filter(r => terms.every(t => Object.values(r).some(v => String(v).toLowerCase().includes(t))));
-                 setResults(filtered);
-            }
+            // Generate chart bars
+            const forecast = useMemo(() => {
+                 const months = Object.keys(metrics.monthlyRenewals).sort();
+                 // Take next 6 months
+                 return months.slice(0, 6).map(m => ({ 
+                     month: m, 
+                     count: metrics.monthlyRenewals[m], 
+                     intensity: Math.min(100, (metrics.monthlyRenewals[m] / (rows.length * 0.2)) * 100)
+                 }));
+            }, [metrics]);
 
             return (
-                <div className="space-y-8">
-                     <div className="bg-slate-900 p-12 rounded-[48px] border border-white/5">
-                         <div className="flex gap-4">
-                             <input type="text" value={query} onChange={e => setQuery(e.target.value)} className="flex-1 bg-slate-950 border border-white/10 rounded-2xl px-6 text-white" placeholder="Search data..." />
-                             <button onClick={handleExtract} className="bg-indigo-600 text-white px-8 rounded-2xl font-bold uppercase text-xs">Extract</button>
-                         </div>
-                     </div>
-                     {results && (
-                         <div className="bg-white p-8 rounded-[40px] shadow-xl">
-                             <h4 className="font-black text-slate-800 text-xl mb-4">{results.length} Results</h4>
-                             <DataTable rows={results} headers={headers} />
-                         </div>
-                     )}
+                <div className="space-y-8 animate-in">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <KpiCard label="Total Personnel" value={metrics.total} icon="Users" color="slate" onClick={()=>onDrillDown("All Records", rows)} />
+                        <KpiCard label="Active Status" value={metrics.active} icon="CreditCard" color="emerald" onClick={()=>onDrillDown("Active", metrics.activeRecords)} />
+                        <KpiCard label="Expired / Risk" value={metrics.expired} icon="ShieldAlert" color="amber" onClick={()=>onDrillDown("Expired", metrics.expiredRecords)} />
+                        <KpiCard label="Escape Reports" value={metrics.escapes} icon="UserX" color="rose" onClick={()=>onDrillDown("Escapes", metrics.escapeRecords)} />
+                    </div>
+
+                    <div className="bg-slate-900 p-10 rounded-[48px] border border-white/5 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-8">
+                            <Icon name="Calendar" className="text-indigo-400" size={24}/>
+                            <h3 className="text-2xl font-black text-white tracking-tight">Expiry Forecast</h3>
+                        </div>
+                        <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+                             {forecast.map(d => (
+                                 <div key={d.month} className="flex-1 min-w-[120px] bg-slate-950 border border-white/5 p-6 rounded-3xl text-center group hover:border-indigo-500/30 transition-all">
+                                     <div className="text-[10px] font-black text-slate-500 mb-2">{d.month}</div>
+                                     <div className="text-3xl font-black text-white mb-4">{d.count}</div>
+                                     <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                                         <div className="h-full bg-indigo-500" style={{width: `${d.intensity}%`}}></div>
+                                     </div>
+                                 </div>
+                             ))}
+                             {forecast.length === 0 && <div className="text-slate-600 text-sm font-bold p-4">No date data available.</div>}
+                        </div>
+                    </div>
                 </div>
             );
         };
-        
-        const UserManagement = () => {
-             // Mock User Management for UI Demo
-             return <div className="text-white text-center p-20">User Management is handled via Google Workspace in GAS Environment.</div>
-        };
 
-        const Login = ({ onLogin }) => {
+        // E. AI ANALYST
+        const AiAnalyst = ({ rows }) => {
+            const [response, setResponse] = useState("");
             const [loading, setLoading] = useState(false);
-            const handleLogin = () => {
+
+            const generate = () => {
                 setLoading(true);
-                GAS.run('getUserSession').then(u => {
-                    onLogin(u);
-                }).finally(() => setLoading(false));
-            }
+                const sample = rows.slice(0, 15);
+                const prompt = `Act as an HR Data Analyst. Analyze this JSON sample of ${rows.length} total records. Identify high-level risks, expiry trends, and nationality distributions. Keep it concise and professional.\n\nData: ${JSON.stringify(sample)}`;
+                
+                GAS.run('callGemini', prompt)
+                   .then(res => setResponse(res))
+                   .catch(e => setResponse("Error: " + e.message))
+                   .finally(() => setLoading(false));
+            };
 
             return (
-                <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-                     <div className="w-full max-w-md bg-slate-900 border border-white/10 rounded-[40px] p-10 text-center">
-                         <div className="w-16 h-16 bg-slate-800 rounded-2xl mx-auto flex items-center justify-center mb-6"><ShieldCheck className="text-indigo-500" size={32}/></div>
-                         <h2 className="text-3xl font-black text-white mb-8">Secure Access</h2>
-                         <button onClick={handleLogin} disabled={loading} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                             {loading ? <Loader2 className="animate-spin" /> : "Authenticate with Google"}
-                         </button>
-                     </div>
+                <div className="bg-slate-900 rounded-[48px] p-12 border border-white/5 animate-in">
+                    <div className="flex justify-between items-start mb-8">
+                        <div>
+                            <h3 className="text-3xl font-black text-white tracking-tighter">AI Narrative</h3>
+                            <p className="text-slate-500 text-sm font-medium mt-2">Gemini 1.5 Flash Analysis</p>
+                        </div>
+                        <button onClick={generate} disabled={loading} className="bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-all">
+                            {loading ? "Analyzing..." : "Generate Report"}
+                        </button>
+                    </div>
+                    <div className="prose prose-invert max-w-none text-slate-400 whitespace-pre-wrap leading-relaxed">
+                        {response || <span className="italic opacity-50">Click generate to analyze the current dataset...</span>}
+                    </div>
                 </div>
             );
         };
 
+        // F. USER MANAGEMENT (Admin Only)
+        const UserManagement = () => {
+             return (
+                 <div className="bg-slate-900 rounded-[40px] p-12 text-center border border-white/5">
+                     <Icon name="Users" size={48} className="mx-auto text-slate-600 mb-4"/>
+                     <h3 className="text-2xl font-black text-white">User Directory</h3>
+                     <p className="text-slate-500 mt-2 text-sm">User management is handled via Google Workspace/IAM in this environment.</p>
+                 </div>
+             );
+        };
 
-        // --- 5. MAIN APP ---
-
+        // --- 5. MAIN APP CONTAINER ---
         const App = () => {
             const [user, setUser] = useState(null);
-            const [loadingAuth, setLoadingAuth] = useState(true);
             const [companies, setCompanies] = useState([]);
-            const [selectedCompanyId, setSelectedCompanyId] = useState("");
-            const [currentData, setCurrentData] = useState(null);
-            const [activeTab, setActiveTab] = useState('dashboard');
-            
-            const [showUpload, setShowUpload] = useState(false);
-            const [showCreate, setShowCreate] = useState(false);
-            const [uploadFile, setUploadFile] = useState(null);
-            const [newEntityName, setNewEntityName] = useState("");
+            const [selectedId, setSelectedId] = useState("");
+            const [data, setData] = useState(null);
+            const [view, setView] = useState('dashboard');
+            const [loadingData, setLoadingData] = useState(false);
             const [drillDown, setDrillDown] = useState(null);
 
+            // Modal States
+            const [showCreate, setShowCreate] = useState(false);
+            const [showUpload, setShowUpload] = useState(false);
+            const [newName, setNewName] = useState("");
+            const [uploadFile, setUploadFile] = useState(null);
+            const [search, setSearch] = useState("");
+
             useEffect(() => {
+                // Initial Auth Check
+                // We fake a "loading" delay for effect, but actually fetch user session immediately
                 GAS.run('getUserSession').then(u => {
-                    setUser(u);
-                    setLoadingAuth(false);
-                    GAS.run('getCompanies').then(setCompanies);
-                }).catch(() => setLoadingAuth(false));
+                    // Check if we have a valid session
+                    if(u && u.email) {
+                        setUser(u);
+                        loadCompanies();
+                    }
+                }).catch(e => console.error(e));
             }, []);
 
-            useEffect(() => {
-                if(!selectedCompanyId) { setCurrentData(null); return; }
-                const comp = companies.find(c => c.id === selectedCompanyId);
-                if(!comp || !comp.hasData) { setCurrentData(null); return; }
+            const loadCompanies = () => {
+                GAS.run('getCompanies').then(setCompanies);
+            };
 
-                downloadCompanyFile(comp.storagePath).then(buffer => {
-                    const wb = XLSX.read(buffer, { type: 'array' });
+            // Load Data
+            useEffect(() => {
+                if(!selectedId) { setData(null); return; }
+                const comp = companies.find(c => c.id === selectedId);
+                if(!comp || !comp.hasData) { setData(null); return; }
+
+                setLoadingData(true);
+                GAS.run('getCompanyFile', comp.storagePath).then(base64 => {
+                    const str = window.atob(base64);
+                    const len = str.length;
+                    const bytes = new Uint8Array(len);
+                    for(let i=0; i<len; i++) bytes[i] = str.charCodeAt(i);
+                    const wb = XLSX.read(bytes.buffer, {type:'array'});
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const json = XLSX.utils.sheet_to_json(ws);
-                    const processed = harmonizeData(json);
-                    setCurrentData(processed);
+                    setData(harmonizeData(json));
+                    setLoadingData(false);
+                }).catch(e => {
+                    alert("Load Error: " + e.message);
+                    setLoadingData(false);
                 });
-            }, [selectedCompanyId]);
+            }, [selectedId]);
+
+            const handleCreate = () => {
+                GAS.run('createCompany', newName).then(() => {
+                    loadCompanies();
+                    setShowCreate(false);
+                    setNewName("");
+                });
+            };
 
             const handleUpload = () => {
-                if(!uploadFile || !selectedCompanyId) return;
-                uploadCompanyData(uploadFile, selectedCompanyId).then(() => {
-                     alert("Upload Complete");
-                     setShowUpload(false);
-                     GAS.run('getCompanies').then(setCompanies);
-                });
-            }
+                if(!uploadFile || !selectedId) return;
+                setLoadingData(true);
+                const reader = new FileReader();
+                reader.readAsDataURL(uploadFile);
+                reader.onload = (e) => {
+                    const base64 = e.target.result.split(',')[1];
+                    GAS.run('uploadCompanyData', base64, uploadFile.name, selectedId)
+                        .then(() => {
+                            alert("Upload Successful");
+                            loadCompanies();
+                            // Force reload data
+                            const temp = selectedId;
+                            setSelectedId("");
+                            setTimeout(() => setSelectedId(temp), 100);
+                            setShowUpload(false);
+                        })
+                        .catch(e => alert(e))
+                        .finally(() => setLoadingData(false));
+                };
+            };
             
-            const handleDelete = (id, path) => {
-                if(!confirm("Delete?")) return;
-                deleteCompanyData(id, path).then(() => GAS.run('getCompanies').then(setCompanies));
+            const handleDelete = (id, fileId) => {
+                 if(confirm("Delete this company and all data?")) {
+                     GAS.run('deleteCompany', id, fileId).then(loadCompanies);
+                 }
             }
 
-            if(loadingAuth) return <div className="h-screen bg-[#020617] flex items-center justify-center"><div className="loader"></div></div>;
-            if(!user) return <Login onLogin={setUser} />;
+            // Filter rows for Grid View
+            const filteredRows = useMemo(() => {
+                if(!data) return [];
+                if(!search) return data.rows;
+                const s = search.toLowerCase();
+                return data.rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(s)));
+            }, [data, search]);
+
+            if (!user) return <Login onLogin={setUser} />;
 
             return (
-                <div className="flex h-screen overflow-hidden bg-[#020617] text-slate-300 font-sans">
-                    <aside className="w-80 bg-slate-950 border-r border-white/5 flex flex-col p-6">
-                        <div className="flex items-center gap-3 mb-10 text-white font-black text-xl tracking-tighter">
-                            <div className="bg-indigo-600 p-2 rounded-lg"><Database size={20}/></div>
-                            DataHarmonizer
+                <div className="flex h-screen overflow-hidden text-slate-300 font-sans">
+                    {/* SIDEBAR */}
+                    <aside className="w-72 bg-slate-950 flex flex-col border-r border-white/5 p-4">
+                        <div className="flex items-center gap-3 px-2 mb-8 mt-2">
+                             <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/20"><Icon name="Database" size={20}/></div>
+                             <div className="font-black text-white text-lg tracking-tighter leading-none">DataHarmonizer<span className="text-indigo-500">Pro</span></div>
                         </div>
-                        
-                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
-                             <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500 tracking-widest px-2 mb-2">
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
+                            <div className="flex justify-between items-center px-3 mb-2 text-[10px] font-black uppercase text-slate-500 tracking-widest">
                                 <span>Entities</span>
-                                {user.role === 'admin' && <button onClick={()=>setShowCreate(true)} className="text-emerald-500 hover:text-white"><Plus size={14}/></button>}
+                                {user.role === 'admin' && <button onClick={()=>setShowCreate(true)} className="hover:text-white"><Icon name="Plus" size={14}/></button>}
                             </div>
                             {companies.map(c => (
-                                <div key={c.id} onClick={()=>setSelectedCompanyId(c.id)} className={`p-3 rounded-xl cursor-pointer text-xs font-bold flex justify-between group transition-all ${selectedCompanyId===c.id ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/50' : 'text-slate-500 hover:bg-white/5 border border-transparent'}`}>
-                                    <div>
-                                        <div className={!c.hasData ? "opacity-50" : ""}>{c.name}</div>
-                                        <div className="text-[9px] opacity-50 mt-1">{c.hasData ? new Date(c.uploadDate).toLocaleDateString() : 'Empty'}</div>
+                                <div key={c.id} onClick={()=>setSelectedId(c.id)} className={`group px-3 py-3 rounded-xl cursor-pointer flex justify-between items-center text-xs font-bold transition-all ${selectedId===c.id ? 'bg-indigo-600/10 text-indigo-300' : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'}`}>
+                                    <div className="truncate pr-2">
+                                        <div className="truncate">{c.name}</div>
+                                        <div className="text-[9px] opacity-50 font-medium">{c.hasData ? 'Active' : 'Empty'}</div>
                                     </div>
-                                    {user.role === 'admin' && <button onClick={(e)=>{e.stopPropagation(); handleDelete(c.id, c.storagePath)}} className="opacity-0 group-hover:opacity-100 text-rose-500"><Trash2 size={12}/></button>}
+                                    {user.role === 'admin' && <button onClick={(e)=>{e.stopPropagation(); handleDelete(c.id, c.storagePath)}} className="opacity-0 group-hover:opacity-100 hover:text-rose-500"><Icon name="Trash2" size={12}/></button>}
                                 </div>
                             ))}
                         </div>
 
-                        <div className="border-t border-white/5 pt-6 space-y-2">
-                            {user.role === 'admin' && <button onClick={()=>setShowUpload(true)} className="w-full bg-slate-900 border border-white/10 hover:border-indigo-500 text-slate-300 p-4 rounded-2xl flex items-center gap-3 text-xs font-black uppercase transition-all mb-4">
-                                <FileUp size={16}/> Update Data
+                        <div className="pt-4 border-t border-white/5 space-y-1">
+                            {user.role === 'admin' && <button onClick={()=>setShowUpload(true)} disabled={!selectedId} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-xl flex items-center gap-3 text-xs font-black uppercase mb-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-900/20">
+                                <Icon name="FileUp" size={16}/> Ingest Data
                             </button>}
-                            {['dashboard', 'grid', 'pivot', 'extract'].map(v => (
-                                <button key={v} onClick={()=>setActiveTab(v)} disabled={!currentData} className={`w-full text-left p-3 rounded-xl flex items-center gap-3 text-sm font-bold capitalize ${activeTab===v ? 'text-white bg-white/5' : 'text-slate-500 hover:text-slate-300'} disabled:opacity-30`}>
-                                    <Activity size={18}/> {v}
-                                </button>
-                            ))}
+                            
+                            <button onClick={()=>setView('dashboard')} disabled={!data} className={`w-full flex items-center gap-3 p-3 rounded-xl text-xs font-bold uppercase tracking-wide ${view==='dashboard' ? 'bg-white/5 text-white' : 'text-slate-500 hover:text-slate-300'} disabled:opacity-30`}><Icon name="PieChart" size={16}/> Dashboard</button>
+                            <button onClick={()=>setView('data')} disabled={!data} className={`w-full flex items-center gap-3 p-3 rounded-xl text-xs font-bold uppercase tracking-wide ${view==='data' ? 'bg-white/5 text-white' : 'text-slate-500 hover:text-slate-300'} disabled:opacity-30`}><Icon name="Table" size={16}/> Grid View</button>
+                            <button onClick={()=>setView('ai')} disabled={!data} className={`w-full flex items-center gap-3 p-3 rounded-xl text-xs font-bold uppercase tracking-wide ${view==='ai' ? 'bg-white/5 text-white' : 'text-slate-500 hover:text-slate-300'} disabled:opacity-30`}><Icon name="Sparkles" size={16}/> AI Analyst</button>
+                            {user.role === 'admin' && <button onClick={()=>setView('users')} className={`w-full flex items-center gap-3 p-3 rounded-xl text-xs font-bold uppercase tracking-wide ${view==='users' ? 'bg-white/5 text-white' : 'text-slate-500 hover:text-slate-300'}`}><Icon name="Users" size={16}/> Users</button>}
                         </div>
                     </aside>
 
-                    <main className="flex-1 bg-[#020617] relative flex flex-col h-full overflow-hidden">
-                        <header className="h-20 border-b border-white/5 flex items-center justify-between px-8 shrink-0">
-                            <h2 className="text-white font-black text-lg">{companies.find(c=>c.id===selectedCompanyId)?.name || "Select Entity"}</h2>
-                            <div className="text-xs text-slate-500 font-bold bg-white/5 px-3 py-1 rounded-full">{user.email}</div>
+                    {/* MAIN */}
+                    <main className="flex-1 flex flex-col relative bg-[#020617] overflow-hidden">
+                        <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-slate-950/50">
+                            <div className="font-bold text-white">{companies.find(c=>c.id===selectedId)?.name || "Select an Entity"}</div>
+                            <div className="flex items-center gap-4">
+                                {view === 'data' && <div className="relative"><Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14}/><input type="text" placeholder="Filter..." value={search} onChange={e=>setSearch(e.target.value)} className="bg-slate-900 border border-white/10 rounded-full pl-9 pr-4 py-1.5 text-xs text-white focus:ring-1 focus:ring-indigo-500 outline-none w-48"/></div>}
+                                <div className="text-xs font-bold text-slate-500 bg-white/5 px-3 py-1 rounded-full">{user.email}</div>
+                            </div>
                         </header>
 
-                        <div className="flex-1 overflow-auto p-8 custom-scrollbar relative">
-                             {!currentData && (
-                                <div className="h-full flex flex-col items-center justify-center text-slate-600">
-                                    <Layers size={48} className="mb-4 opacity-50"/>
-                                    <div className="font-black uppercase tracking-widest text-sm">Select a company to view data</div>
+                        <div className="flex-1 overflow-auto p-8 relative custom-scrollbar">
+                            {loadingData && (
+                                <div className="absolute inset-0 bg-slate-950/80 z-50 flex items-center justify-center backdrop-blur-sm">
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="loader w-8 h-8"></div>
+                                        <div className="text-xs font-black uppercase tracking-widest text-slate-500">Processing Data...</div>
+                                    </div>
                                 </div>
-                             )}
+                            )}
 
-                             {currentData && (
+                            {!data && !loadingData && view !== 'users' && (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-600 opacity-50">
+                                    <Icon name="Layers" size={64} className="mb-4"/>
+                                    <div className="font-black uppercase tracking-widest">No Data Loaded</div>
+                                </div>
+                            )}
+
+                            {view === 'users' && <UserManagement />}
+
+                            {data && !loadingData && (
                                 <>
-                                    {activeTab === 'dashboard' && <Dashboard rows={currentData.rows} onDrillDown={(t, r) => setDrillDown({title: t, rows: r})} />}
-                                    {activeTab === 'grid' && <DataTable rows={currentData.rows} headers={currentData.headers} />}
-                                    {activeTab === 'pivot' && <PivotView rows={currentData.rows} headers={currentData.headers} />}
-                                    {activeTab === 'extract' && <ReportExtractor rows={currentData.rows} headers={currentData.headers} />}
+                                    {view === 'dashboard' && <Dashboard rows={data.rows} onDrillDown={(t, r) => setDrillDown({title: t, rows: r})} />}
+                                    {view === 'data' && <DataTable rows={filteredRows} headers={data.headers} highlight={search} />}
+                                    {view === 'ai' && <AiAnalyst rows={data.rows} />}
                                 </>
-                             )}
+                            )}
                         </div>
                     </main>
 
+                    {/* MODALS */}
                     {showCreate && <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                        <div className="bg-slate-900 p-8 rounded-[40px] border border-white/10 w-full max-w-md">
-                            <h3 className="text-2xl font-black text-white mb-6">New Entity</h3>
-                            <input autoFocus type="text" placeholder="Company Name" className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-white mb-6 outline-none focus:border-indigo-500" value={newEntityName} onChange={e=>setNewEntityName(e.target.value)}/>
+                        <div className="bg-slate-900 p-8 rounded-[40px] border border-white/10 w-full max-w-md shadow-2xl">
+                            <h3 className="text-2xl font-black text-white mb-2">New Entity</h3>
+                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mb-6">Create Company Shell</p>
+                            <input autoFocus type="text" placeholder="Company Name" className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white mb-6 outline-none focus:ring-2 focus:ring-indigo-500 font-bold" value={newName} onChange={e=>setNewName(e.target.value)}/>
                             <div className="flex gap-4">
-                                <button onClick={()=>setShowCreate(false)} className="flex-1 py-4 rounded-xl text-slate-500 font-bold hover:bg-white/5">Cancel</button>
-                                <button onClick={()=>{ createCompanyEntity(newEntityName).then(()=>{ GAS.run('getCompanies').then(setCompanies); setShowCreate(false); }) }} className="flex-1 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-500">Create</button>
+                                <button onClick={()=>setShowCreate(false)} className="flex-1 py-4 rounded-xl text-slate-500 font-bold hover:bg-white/5 uppercase text-xs">Cancel</button>
+                                <button onClick={handleCreate} disabled={!newName} className="flex-1 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-500 uppercase text-xs shadow-lg shadow-emerald-900/20">Create</button>
                             </div>
                         </div>
                     </div>}
 
                     {showUpload && <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                        <div className="bg-slate-900 p-8 rounded-[40px] border border-white/10 w-full max-w-md">
+                        <div className="bg-slate-900 p-8 rounded-[40px] border border-white/10 w-full max-w-md shadow-2xl">
                              <h3 className="text-2xl font-black text-white mb-2">Upload Data</h3>
-                             <p className="text-xs text-amber-500 font-bold mb-6 bg-amber-500/10 p-3 rounded-lg">Target: {companies.find(c=>c.id===selectedCompanyId)?.name || 'None'}</p>
-                             <input type="file" accept=".xlsx" onChange={e=>setUploadFile(e.target.files[0])} className="w-full bg-black/20 border border-white/10 rounded-xl p-4 text-slate-400 mb-8"/>
+                             <p className="text-xs text-amber-500 font-bold mb-6 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">Warning: Overwrites existing data for this entity.</p>
+                             <input type="file" accept=".xlsx" onChange={e=>setUploadFile(e.target.files[0])} className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-slate-400 mb-8 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500"/>
                              <div className="flex gap-4">
-                                <button onClick={()=>setShowUpload(false)} className="flex-1 py-4 rounded-xl text-slate-500 font-bold hover:bg-white/5">Cancel</button>
-                                <button onClick={handleUpload} className="flex-1 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500">Upload</button>
+                                <button onClick={()=>setShowUpload(false)} className="flex-1 py-4 rounded-xl text-slate-500 font-bold hover:bg-white/5 uppercase text-xs">Cancel</button>
+                                <button onClick={handleUpload} disabled={!uploadFile} className="flex-1 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500 uppercase text-xs shadow-lg shadow-indigo-900/20">Upload</button>
                              </div>
                         </div>
                     </div>}
 
-                    {drillDown && <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
-                         <div className="bg-white w-full max-w-7xl h-[90vh] rounded-[40px] flex flex-col overflow-hidden">
-                             <div className="p-8 border-b border-slate-100 flex justify-between items-center">
-                                 <h3 className="text-2xl font-black text-slate-900">{drillDown.title}</h3>
-                                 <button onClick={()=>setDrillDown(null)} className="p-4 bg-slate-100 rounded-full hover:bg-slate-200"><X size={24} className="text-slate-600"/></button>
+                    {drillDown && <div className="fixed inset-0 z-[110] flex items-center justify-center p-8 bg-black/90 backdrop-blur-xl animate-in">
+                         <div className="bg-slate-900 w-full max-w-6xl h-[85vh] rounded-[48px] border border-white/10 flex flex-col overflow-hidden shadow-2xl relative">
+                             <div className="p-8 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
+                                 <div>
+                                     <h3 className="text-2xl font-black text-white">{drillDown.title}</h3>
+                                     <div className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">{drillDown.rows.length} Records</div>
+                                 </div>
+                                 <button onClick={()=>setDrillDown(null)} className="p-4 bg-white/5 rounded-full hover:bg-white/10 text-white transition-all"><Icon name="X" size={24}/></button>
                              </div>
-                             <div className="flex-1 overflow-hidden p-8 bg-slate-50">
-                                 <DataTable rows={drillDown.rows} headers={currentData.headers} />
+                             <div className="flex-1 overflow-hidden p-8 bg-slate-900">
+                                 <DataTable rows={drillDown.rows} headers={data.headers} highlight="" />
                              </div>
                          </div>
                     </div>}
-
                 </div>
             );
         };
